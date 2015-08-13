@@ -9,20 +9,17 @@ LANG: C++
 
 using namespace std;
 
-int combine(int* timeTable, int N) {
-    int found = 0;
-    for (int i = 0; i < 2 * N - 1; i += 2) {
-        for (int j = 0; j < 2 * N - 1; j += 2) {
-            if (i != j) {
-                if (timeTable[i + 1] >= timeTable[j] && timeTable[i] < timeTable[j] && timeTable[j + 1] > timeTable[i + 1]) {
-                    found = 1;
-                    timeTable[i + 1] = timeTable[j + 1];
-                    timeTable[j] = timeTable[j + 1] = 0;
-                }
-            }
+int count_element(int element, int array[], int N) {
+    int count = 0;
+    for (int i = 0; i < N; i++) {
+        if (array[i] == element) {
+            count++;
+        }
+        if (element < array[i]) {
+            break;
         }
     }
-    return found;
+    return count;
 }
 
 int main() {
@@ -35,48 +32,55 @@ int main() {
     int max = 0;
     int max2 = 0;
 
-    int havingCowInterval, noCowInterval = 0;
-    int timeTable[2 * N - 1];
-    int starts[ N - 1];
+    int starts[N];
+    int ends[N];
 
-    for (int i = 0; i < 2*N - 1; i += 2) {
-        cout << "i : " << i << endl;
+    for (int i = 0; i < N; i ++) {
         int start, end;
         fin >> start;
         fin >> end;
-        timeTable[i] = start;
-        timeTable[i + 1] = end;
-        starts[i / 2] = start;
+        starts[i] = start;
+        ends[i] = end;
     }
 
-    for (int i = 0; i < 2*N - 1; i += 2) {
-        cout << timeTable[i] << " " << timeTable[i + 1] << endl;
-    }
-    while (combine(timeTable, N)) {
-        cout << "while combining" << endl;
-    }
+    // Sort starts and ends
+    std::sort(starts, starts+sizeof(starts)/sizeof(int));
+    std::sort(ends, ends+sizeof(ends)/sizeof(int));
 
-    for (int i = 0; i < 2*N - 1; i += 2) {
-        if (timeTable[i + 1] - timeTable[i] > max) {
-            max = timeTable[i + 1] - timeTable[i];
+    int total_start = starts[0];
+    int total_end = ends[N - 1];
+    int num_start = 0;
+    int num_end = 0;
+
+    int milking_interval_max = 0;
+    int milking_interval_counter = 0;
+    int non_milking_interval_max = 0;
+    int non_milking_interval_counter = 0;
+
+    for (int t = total_start; t <= total_end; t++) {
+        num_start += count_element(t, starts, N);
+        num_end += count_element(t, ends, N);
+
+        if (num_start > num_end) {
+            // there are more than one farmer milking cows
+            if (non_milking_interval_counter > non_milking_interval_max) {
+                non_milking_interval_max = non_milking_interval_counter;
+            }
+            non_milking_interval_counter = 0;
+            milking_interval_counter++;
+        } else if (num_start == num_end) {
+            // no body's milking cow now
+            if (milking_interval_counter > milking_interval_max) {
+                milking_interval_max = milking_interval_counter;
+            }
+            milking_interval_counter = 0;
+            non_milking_interval_counter++;
         }
-        cout << timeTable[i] << " " << timeTable[i + 1] << endl;
-    }
-
-    for (int i = 0; i < 2 * N - 1; i += 2) {
-        // for (int j = 0; j < 2 * N - 1; j += 2) {
-        //     if (i != j && timeTable[i] != 0 && timeTable[j] != 0 && timeTable[j] - timeTable[i + 1] > max2) {
-        //         cout << "timeTable[j]: " << timeTable[j] << endl;
-        //         cout << "timeTable[i+1]: " << timeTable[i+1] << endl;
-        //         max2 = timeTable[j] - timeTable[i + 1];
-        //     }
-        // }
-        
     }
 
 
-    cout << max << endl;
-    cout << max2 << endl;
+    cout << milking_interval_max << endl;
+    cout << non_milking_interval_max << endl;
 
-    fout << max << " " << max2 << endl;
+    fout << milking_interval_max << " " << non_milking_interval_max << endl;
 }
