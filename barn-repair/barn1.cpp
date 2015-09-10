@@ -5,11 +5,7 @@ LANG: C++
 */
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <string>
-#include <cmath>
-#include <algorithm>
-#include <cstdlib>
 
 using namespace std;
 
