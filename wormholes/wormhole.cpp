@@ -5,62 +5,72 @@ LANG: C++
 */
 #include <iostream>
 #include <fstream>
-#include <string>
-#include <vector>
-
 using namespace std;
+#define MAX_N 12
 
-struct Point {
-	int x;
-	int y;
-};
+// answer: http://usaco.org/current/data/sol_wormhole.html
 
-struct Pair {
-	Point p1;
-	Point p2;
-};
+int N, X[MAX_N+1], Y[MAX_N+1];
+int partner[MAX_N+1];
+int next_on_right[MAX_N+1];
 
-bool points_are_equal(const Point& p1, const Point& p2) {
-	return p1.x == p2.x && p1.y == p2.y;
+bool cycle_exists(void)
+{
+  for (int start=1; start<=N; start++) {
+    // does there exist a cylce starting from start
+    int pos = start;
+    for (int count=0; count<N; count++)
+      pos = next_on_right[partner[pos]];
+    if (pos != 0) return true;
+  }
+  return false;
 }
 
-bool pairs_are_equal(const Pair& pair1, const Pair& pair2) {
-	return (points_are_equal(pair1.p1, pair2.p1) && points_are_equal(pair1.p2, pair2.p2))
-	|| (points_are_equal(pair1.p1, pair2.p2) && points_are_equal(pair1.p2, pair2.p1));
+// count all solutions
+int solve(void) 
+{
+  // find first unpaired wormhole
+  int i, total=0;
+  for (i=1; i<=N; i++) 
+    if (partner[i] == 0) break;
+
+  // everyone paired?
+  if (i > N) {
+    if (cycle_exists()) return 1;
+    else return 0;
+  }
+
+  // try pairing i with all possible other wormholes j
+  for (int j=i+1; j<=N; j++)
+    if (partner[j] == 0) {
+      // try pairing i & j, let recursion continue to 
+      // generate the rest of the solution
+      partner[i] = j;
+      partner[j] = i;
+      total += solve();
+      partner[i] = partner[j] = 0;
+    }
+  return total;
 }
 
-int main() {
-	ofstream fout ("wormhole.out");
-	ifstream fin ("wormhole.in");
+int main(void)
+{
+  ifstream fin("wormhole.in");
+  fin >> N;
+  for (int i=1; i<=N; i++) fin >> X[i] >> Y[i];
+  fin.close();
+  
+  for (int i=1; i<=N; i++) // set next_on_right[i]...
+    for (int j=1; j<=N; j++)
+      if (X[j] > X[i] && Y[i] == Y[j]) // j right of i...
+	if (next_on_right[i] == 0 ||
+	    X[j]-X[i] < X[next_on_right[i]]-X[i])
+	  next_on_right[i] = j;
 
-	int N;
-	fin >> N;
-	vector<Point> points;
-	vector<Pair> pairs;
-	vector<vector<Pair> > groups;
-	for (int i = 0; i < N; ++i) {
-		Point p;
-		fin >> p.x >> p.y;
-		points.push_back(p);
-	}
-
-	for (int i = 0; i < points.size(); ++i) {
-		cout << "point: " << points[i].x << ", " << points[i].y << endl;
-	}
-
-	// all pairs
-	for (int i = 0; i < points.size(); ++i) {
-		for (int j = i; ++j < points.size();) {
-			Pair pair;
-			pair.p1 = points[i];
-			pair.p2 = points[j];
-			pairs.push_back(pair);
-		}
-	}
-
-	for (int i = 0; i < pairs.size(); ++i) {
-
-	}
+  ofstream fout("wormhole.out");
+  fout << solve() << "\n";
+  fout.close();
+  return 0;
 }
 
 
